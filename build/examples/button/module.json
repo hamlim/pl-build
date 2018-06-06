@@ -1,0 +1,8 @@
+{
+  "name": "Button",
+  "moduleName": "button",
+  "demos": [
+    "button-simple-demo.js",
+    "button-complex-demo.js"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "build",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Matthew Hamlin <hamlim@outlook.com> (https://matthamlin.me/)",
+  "license": "MIT",
+  "dependencies": {
+    "directory-tree": "2.1.0"
+  }
+}
