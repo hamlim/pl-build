@@ -1,8 +1,11 @@
 import React from 'react'
 import Icon from 'icon'
+import Button from 'button'
 
 const StarDemo = () => (
-  <Icon name="star" title="You are a star!" />
+  <Button>
+    <Icon name="star" title="You are a star!" />
+  </Button>
 )
 
 export default StarDemo

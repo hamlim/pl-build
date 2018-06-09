@@ -1,8 +1,0 @@
-{
-  "name": "Icon",
-  "moduleName": "icon",
-  "demos": [
-    "icon-simple-demo.js",
-    "icon-star-demo.js"
-  ]
-}

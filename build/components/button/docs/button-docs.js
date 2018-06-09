@@ -16,6 +16,8 @@ import rawButton from "raw!button"
 
 import ButtonComplexDemo from "button-complex-demo"
 import rawButtonComplexDemo from "raw!button-complex-demo"
+/* @TODO: Include these imports into liveScope below */
+import PropTypes from "prop-types"
 
 import ButtonSimpleDemo from "button-simple-demo"
 import rawButtonSimpleDemo from "raw!button-simple-demo"
@@ -25,7 +27,11 @@ export const route = "/button"
 export const data: componentDataType = {
   route,
   some: "other",
-  things: "here"
+  things: "here",
+  liveScope: {
+    Button
+    /* @TODO add extra imports here */
+  }
 }
 
 const variations = [

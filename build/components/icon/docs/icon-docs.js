@@ -19,13 +19,19 @@ import rawIconSimpleDemo from "raw!icon-simple-demo"
 
 import IconStarDemo from "icon-star-demo"
 import rawIconStarDemo from "raw!icon-star-demo"
+/* @TODO: Include these imports into liveScope below */
+import Button from "button"
 
 export const route = "/icon"
 
 export const data: componentDataType = {
   route,
   some: "other",
-  things: "here"
+  things: "here",
+  liveScope: {
+    Icon
+    /* @TODO add extra imports here */
+  }
 }
 
 const variations = [

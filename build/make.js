@@ -3,31 +3,13 @@ const dirTree = require('directory-tree')
 const fs = require('fs')
 const { DIRECTORY, DEMO_DIRECTORY } = require('./env.js')
 const prettier = require('prettier')
-
-const toLower = s => s.toLowerCase()
-const toUpper = s => s.charAt(0).toUpperCase() + s.substr(1)
-
-const getBareFileFrom = fileName => {
-  return fileName.slice(0, -3)
-}
-
-const camelize = (text, separator = '-') => {
-  let actualSep = text.includes('_') ? '_' : separator
-  const words = text.split(actualSep)
-  return [
-    words[0],
-    words
-      .slice(1)
-      .map(toUpper)
-      .join(''),
-  ].join('')
-}
-
-const toWords = (text, separator = '-') => {
-  let actualSep = text.includes('_') ? '_' : separator
-  const words = text.split(actualSep)
-  return words.join(' ')
-}
+const {
+  toLower,
+  toUpper,
+  getBareFileFrom,
+  camelize,
+  toWords,
+} = require('./utils.js')
 
 /**
  * fileName = 'button.js'
@@ -65,7 +47,11 @@ export const route = '/${toLower(moduleName)}';
 export const data: componentDataType = {
   route,
   some: 'other',
-  things: 'here'
+  things: 'here',
+  liveScope: {
+    ${moduleName},
+    /* @TODO add extra imports here */
+  }
 };
 
 const variations = [
@@ -115,14 +101,61 @@ ${template}`
   }, '')
 }
 
+const getFileImportsFrom = (demo, registry) => {
+  const fileContents = fs.readFileSync(demo.path, {
+    encoding: 'utf-8',
+  })
+  const lines = fileContents.split('\n')
+  let isInMultiLineImport = false
+  let multiImportString = ''
+
+  lines.forEach(line => {
+    if (line.includes('import') && line.includes('from')) {
+      const key = line.split('from ')[1]
+      if (!registry.has(key)) {
+        registry.set(key, line)
+      }
+    } else if (
+      line.includes('import') &&
+      !line.includes('from') &&
+      !isInMultiLineImport
+    ) {
+      isInMultiLineImport = true
+      multiImportString += line + '\n'
+    } else if (
+      isInMultiLineImport &&
+      !line.includes('from')
+    ) {
+      multiImportString += line + '\n'
+    } else if (
+      isInMultiLineImport &&
+      line.includes('from')
+    ) {
+      multiImportString += line
+      isInMultiLineImport = false
+      const key = line.split('from ')[1]
+      registry.set(key, multiImportString)
+      multiImportString = ''
+    }
+  })
+  return registry
+}
+
 const parseChildren = (child, filePrefix = '') => {
   const { children, name } = child
   const bareFile = `${filePrefix}${name}`
   const fileName = `${bareFile}.js`
+  const moduleName = toUpper(camelize(name))
+  let moduleRegistry = new Map()
+  moduleRegistry.set("'react'", `import React from 'react'`)
+  moduleRegistry.set(
+    `'${bareFile}'`,
+    `import ${moduleName} from '${bareFile}'`,
+  )
   let ret = {
     bareFile,
     fileName,
-    moduleName: toUpper(camelize(name)),
+    moduleName,
   }
   // Get the demos
   const demoDirectory = children.find(
@@ -140,13 +173,37 @@ const parseChildren = (child, filePrefix = '') => {
   const formattedDemoFiles = demoFiles.map(demo => {
     const withoutExtension = getBareFileFrom(demo.name)
     const name = toUpper(camelize(withoutExtension))
+
+    const prevValues = [...moduleRegistry.entries()]
+    moduleRegistry = getFileImportsFrom(
+      demo,
+      moduleRegistry,
+    )
+
+    let fileImports = [...moduleRegistry.entries()]
+
+    const dedupped = fileImports
+      .reduce((acc, importEntry, ndx) => {
+        if (
+          prevValues[ndx] &&
+          prevValues[ndx][0] === importEntry[0]
+        ) {
+          return acc
+        } else {
+          return [...acc, importEntry]
+        }
+      }, [])
+      .map(([key, path]) => path)
+    let hasExtraImports = dedupped.length > 0
+
     return {
       oldName: withoutExtension,
       name,
       bareFile: withoutExtension,
       rawName: `raw${name}`,
-      // @TODO: Get file imports from the demo files
-      demoFileImports: '',
+      demoFileImports: hasExtraImports
+        ? dedupped.join('\n')
+        : '',
     }
   })
 
@@ -156,7 +213,14 @@ const parseChildren = (child, filePrefix = '') => {
       return `${acc}
 import ${demo.name} from '${demo.bareFile}';
 import ${demo.rawName} from 'raw!${demo.bareFile}';
-${demo.demoFileImports}`
+${
+        demo.demoFileImports.length > 0
+          ? '/* @TODO: Include these imports into liveScope below */'
+          : ''
+      }
+${demo.demoFileImports};
+
+`
     },
     '',
   )
