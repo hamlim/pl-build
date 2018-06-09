@@ -5,6 +5,7 @@
   "author": "Matthew Hamlin <hamlim@outlook.com> (https://matthamlin.me/)",
   "license": "MIT",
   "dependencies": {
-    "directory-tree": "2.1.0"
+    "directory-tree": "2.1.0",
+    "prettier": "1.13.5"
   }
 }

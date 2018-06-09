@@ -1,3 +1,4 @@
 module.exports = {
-  DIRECTORY: './examples',
+  DIRECTORY: './build/components',
+  DEMO_DIRECTORY: 'demos',
 }
